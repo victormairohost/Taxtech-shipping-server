@@ -60,7 +60,9 @@ GET /api/shipments
 
 2. Get Single Shipment
 GET /api/shipments/:id
+
 Path Parameter: Shipment ID (MongoDB ObjectId)
+
 Example: GET /api/shipments/507f1f77bcf86cd799439011
 
 3. Create Shipment
@@ -149,18 +151,6 @@ Business Rules:
     "message": "Shipment not found"
 }
 ```
-
-src/
-├── config/           # Configuration (database)
-├── controllers/      # Request handlers
-├── interfaces/       # interface
-├── middleware/       # Express middleware (error handling)
-├── models/          # Database models and interfaces
-├── routes/          # API route definitions
-├── services/        # Business logic layer
-├── utils/           # Utility functions
-├── index.ts         # Express app setup
-
 
 🧪 Testing
 
