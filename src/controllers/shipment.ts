@@ -216,36 +216,3 @@ export const deleteShipment = async (req: Request, res: Response) => {
     );
   }
 };
-
-// 6. GET SHIPMENTS BY STATUS
-export const getShipmentsByStatus = async (req: Request, res: Response) => {
-  try {
-    const status = req.params.status.toLowerCase();
-    const validStatuses = Object.values(ShipmentStatus);
-
-    if (!validStatuses.includes(status as ShipmentStatus)) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.BAD_REQUEST,
-        `Invalid status. Must be one of: ${validStatuses.join(", ")}`
-      );
-    }
-
-    const shipments = await Shipment.findByStatus(status as ShipmentStatus);
-
-    return successResponse(
-      res,
-      HTTP_STATUS_CODE.OK,
-      "Shipments fetched successfully",
-      { count: shipments.length, shipments }
-    );
-  } catch (err: any) {
-    if (err instanceof CustomError) {
-      return errorResponse(res, err.statusCode, err.message);
-    }
-    return errorResponse(
-      res,
-      HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR,
-      "Error fetching shipments by status"
-    );
-  }
-};
