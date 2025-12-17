@@ -1,3 +1,4 @@
+"use strict";
 // // A package to access the environment variables
 // import "dotenv/config";
 // // A package to handle async errors
@@ -47,17 +48,4 @@
 //     console.log(error);
 //   }
 // });
-// src/index.ts
-import app from "./app.js"; // <-- note .js after build
-import { connectToDB } from "./config/databaseConnection.js";
-const port = process.env.PORT || 4000;
-app.listen(port, async () => {
-    try {
-        await connectToDB();
-        console.log(`Server is running on port ${port}`);
-    }
-    catch (error) {
-        console.error(error);
-    }
-});
 //# sourceMappingURL=index.js.map
