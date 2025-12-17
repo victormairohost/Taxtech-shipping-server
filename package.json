@@ -7,8 +7,8 @@
     "build": "rimraf dist && npx tsc",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc -w\" \"nodemon dist/index.js\"",
-    "pretest": "npm run build",    
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --testTimeout=20000"
+    "pretest": "npm run build",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --testTimeout=20000"
   },
   "keywords": [],
   "author": "",
@@ -50,6 +50,7 @@
     "@types/nodemailer": "^6.4.15",
     "@types/supertest": "^6.0.3",
     "@types/validator": "^13.12.0",
+    "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "rimraf": "^6.0.1",
     "supertest": "^7.1.4",
