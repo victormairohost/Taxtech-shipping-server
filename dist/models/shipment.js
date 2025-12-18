@@ -12,28 +12,28 @@ const shipmentSchema = new Schema({
         type: String,
         required: [true, "Sender name is required"],
         trim: true,
-        minlength: [2, "Sender name must be at least 2 characters"],
+        minlength: [3, "Sender name must be at least 3 characters"],
         maxlength: [100, "Sender name cannot exceed 100 characters"]
     },
     receiverName: {
         type: String,
         required: [true, "Receiver name is required"],
         trim: true,
-        minlength: [2, "Receiver name must be at least 2 characters"],
+        minlength: [3, "Receiver name must be at least 3 characters"],
         maxlength: [100, "Receiver name cannot exceed 100 characters"]
     },
     origin: {
         type: String,
         required: [true, "Origin is required"],
         trim: true,
-        minlength: [2, "Origin must be at least 2 characters"],
+        minlength: [5, "Origin must be at least 5 characters"],
         maxlength: [200, "Origin cannot exceed 200 characters"]
     },
     destination: {
         type: String,
         required: [true, "Destination is required"],
         trim: true,
-        minlength: [2, "Destination must be at least 2 characters"],
+        minlength: [5, "Destination must be at least 5 characters"],
         maxlength: [200, "Destination cannot exceed 200 characters"]
     },
     status: {
@@ -42,8 +42,7 @@ const shipmentSchema = new Schema({
             values: Object.values(ShipmentStatus),
             message: '{VALUE} is not a valid status'
         },
-        default: ShipmentStatus.PENDING,
-        index: true
+        default: ShipmentStatus.PENDING
     }
 }, {
     timestamps: true,
@@ -53,8 +52,8 @@ const shipmentSchema = new Schema({
         transform: (_doc, ret) => {
             const { _id, ...rest } = ret;
             return {
-                ...rest,
                 id: _id.toString(),
+                ...rest,
             };
         },
     },
@@ -87,13 +86,17 @@ async function generateUniqueTrackingNumber() {
 // Indexes
 shipmentSchema.index({ status: 1, createdAt: -1 });
 // Static methods
-shipmentSchema.statics.doesTrackingNumberExist = async function (trackingNumber) {
-    const count = await this.countDocuments({ trackingNumber });
-    return count > 0;
-};
-shipmentSchema.statics.findByStatus = async function (status) {
-    return await this.find({ status }).sort({ createdAt: -1 });
-};
+// shipmentSchema.statics.doesTrackingNumberExist = async function (
+//   trackingNumber: string
+// ): Promise<boolean> {
+//   const count = await this.countDocuments({ trackingNumber });
+//   return count > 0;
+// };
+// shipmentSchema.statics.findByStatus = async function (
+//   status: ShipmentStatus
+// ): Promise<ShipmentDocument[]> {
+//   return await this.find({ status }).sort({ createdAt: -1 });
+// };
 // Instance methods
 shipmentSchema.methods.canUpdate = function () {
     const restrictedStatuses = [ShipmentStatus.DELIVERED, ShipmentStatus.CANCELLED];

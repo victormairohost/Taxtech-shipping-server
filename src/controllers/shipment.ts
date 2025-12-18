@@ -4,9 +4,9 @@ import { Shipment } from "../models/shipment.js";
 import HTTP_STATUS_CODE from "../utils/statusCodes.js";
 import { CustomError } from "../utils/helpers.js";
 import { ShipmentStatus } from "../interfaces/shipment.interface.js";
-import { successResponse, errorResponse } from "../utils/responses.js";
+import { successResponse } from "../utils/responses.js"; // Remove errorResponse import
 
-// Reusable input validator
+
 const validateRequired = (body: any, fields: string[]) => {
   fields.forEach(field => {
     if (!body[field] || body[field].trim() === "") {
@@ -18,7 +18,7 @@ const validateRequired = (body: any, fields: string[]) => {
   });
 };
 
-// Validate ObjectId
+
 const validateObjectId = (id: string) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new CustomError(
@@ -30,189 +30,128 @@ const validateObjectId = (id: string) => {
 
 // 1. CREATE SHIPMENT
 export const createShipment = async (req: Request, res: Response) => {
-  try {
-    validateRequired(req.body, ["senderName", "receiverName", "origin", "destination"]);
+  validateRequired(req.body, ["senderName", "receiverName", "origin", "destination"]);
+  
+  const shipment = await Shipment.create({
+    senderName: req.body.senderName,
+    receiverName: req.body.receiverName,
+    origin: req.body.origin,
+    destination: req.body.destination,
+  });
 
-    const shipment = await Shipment.create({
-      senderName: req.body.senderName,
-      receiverName: req.body.receiverName,
-      origin: req.body.origin,
-      destination: req.body.destination,
-    });
-
-    return successResponse(
-      res,
-      HTTP_STATUS_CODE.CREATED,
-      "Shipment created successfully",
-      shipment
-    );
-  } catch (err: any) {
-    if (err instanceof CustomError) {
-      return errorResponse(res, err.statusCode, err.message);
-    }
-    return errorResponse(
-      res,
-      HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR,
-      "Error creating shipment"
-    );
-  }
+  return successResponse(
+    res,
+    HTTP_STATUS_CODE.CREATED,
+    "Shipment created successfully",
+    shipment
+  );
 };
 
 // 2. GET ALL SHIPMENTS
 // @ts-ignore
 export const getAllShipments = async (req: Request, res: Response) => {
-  try {
-    const shipments = await Shipment.find().sort({ createdAt: -1 });
+  const shipments = await Shipment.find().sort({ createdAt: -1 });
 
-    return successResponse(
-      res,
-      HTTP_STATUS_CODE.OK,
-      "Shipments fetched successfully",
-      { count: shipments.length, shipments }
-    );
-  } catch {
-    return errorResponse(
-      res,
-      HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR,
-      "Error fetching shipments"
-    );
-  }
+  return successResponse(
+    res,
+    HTTP_STATUS_CODE.OK,
+    "Shipments fetched successfully",
+    { count: shipments.length, shipments }
+  );
 };
 
 // 3. GET SHIPMENT BY ID
 export const getShipmentById = async (req: Request, res: Response) => {
-  try {
-    validateObjectId(req.params.id);
+  validateObjectId(req.params.id);
+  
+  const shipment = await Shipment.findById(req.params.id);
 
-    const shipment = await Shipment.findById(req.params.id);
-
-    if (!shipment) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.NOT_FOUND,
-        "Shipment not found"
-      );
-    }
-
-    return successResponse(
-      res,
-      HTTP_STATUS_CODE.OK,
-      "Shipment fetched successfully",
-      shipment
-    );
-  } catch (err: any) {
-    if (err instanceof CustomError) {
-      return errorResponse(res, err.statusCode, err.message);
-    }
-    return errorResponse(
-      res,
-      HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR,
-      "Error fetching shipment"
+  if (!shipment) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.NOT_FOUND,
+      "Shipment not found"
     );
   }
+
+  return successResponse(
+    res,
+    HTTP_STATUS_CODE.OK,
+    "Shipment fetched successfully",
+    shipment
+  );
 };
 
 // 4. UPDATE SHIPMENT
 export const updateShipment = async (req: Request, res: Response) => {
-  try {
-    validateObjectId(req.params.id);
-
-    const shipment = await Shipment.findById(req.params.id);
-
-    if (!shipment) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.NOT_FOUND,
-        "Shipment not found"
-      );
-    }
-
-    // Block if status is delivered/cancelled
-    if (!shipment.canUpdate()) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.FORBIDDEN,
-        "Cannot update delivered or cancelled shipment"
-      );
-    }
-
-    // Body must include status
-    if (!req.body.status) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.BAD_REQUEST,
-        "Status is required"
-      );
-    }
-
-    // Validate enum
-    const validStatuses = Object.values(ShipmentStatus);
-    if (!validStatuses.includes(req.body.status)) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.BAD_REQUEST,
-        `Invalid status. Allowed: ${validStatuses.join(", ")}`
-      );
-    }
-
-    shipment.status = req.body.status;
-    await shipment.save();
-
-    return successResponse(
-      res,
-      HTTP_STATUS_CODE.OK,
-      "Shipment status updated successfully",
-      shipment
-    );
-  } catch (err: any) {
-    console.error("UPDATE ERROR:", err);
-
-    if (err instanceof CustomError) {
-      return errorResponse(res, err.statusCode, err.message);
-    }
-
-    return errorResponse(
-      res,
-      HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR,
-      "Error updating shipment"
+  validateObjectId(req.params.id);
+  
+  const shipment = await Shipment.findById(req.params.id);
+  
+  if (!shipment) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.NOT_FOUND,
+      "Shipment not found"
     );
   }
+
+  if (!shipment.canUpdate()) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.FORBIDDEN,
+      "Cannot update delivered or cancelled shipment"
+    );
+  }
+
+  if (!req.body.status) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Status is required"
+    );
+  }
+
+  const validStatuses = Object.values(ShipmentStatus);
+  if (!validStatuses.includes(req.body.status)) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      `Invalid status. Allowed: ${validStatuses.join(", ")}`
+    );
+  }
+
+  shipment.status = req.body.status;
+  await shipment.save();
+
+  return successResponse(
+    res,
+    HTTP_STATUS_CODE.OK,
+    "Shipment status updated successfully",
+    shipment
+  );
 };
-
-
-
 
 // 5. DELETE SHIPMENT
 export const deleteShipment = async (req: Request, res: Response) => {
-  try {
-    validateObjectId(req.params.id);
-
-    const shipment = await Shipment.findById(req.params.id);
-
-    if (!shipment) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.NOT_FOUND,
-        "Shipment not found"
-      );
-    }
-
-    if (!shipment.canDelete()) {
-      throw new CustomError(
-        HTTP_STATUS_CODE.FORBIDDEN,
-        "Only pending shipments can be deleted"
-      );
-    }
-
-    await shipment.deleteOne();
-
-    return successResponse(
-      res,
-      HTTP_STATUS_CODE.OK,
-      "Shipment deleted successfully"
-    );
-  } catch (err: any) {
-    if (err instanceof CustomError) {
-      return errorResponse(res, err.statusCode, err.message);
-    }
-    return errorResponse(
-      res,
-      HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR,
-      "Error deleting shipment"
+  validateObjectId(req.params.id);
+  
+  const shipment = await Shipment.findById(req.params.id);
+  
+  if (!shipment) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.NOT_FOUND,
+      "Shipment not found"
     );
   }
+
+  if (!shipment.canDelete()) {
+    throw new CustomError(
+      HTTP_STATUS_CODE.FORBIDDEN,
+      "Only pending shipments can be deleted"
+    );
+  }
+
+  await shipment.deleteOne();
+
+  return successResponse(
+    res,
+    HTTP_STATUS_CODE.OK,
+    "Shipment deleted successfully"
+  );
 };

@@ -5,7 +5,6 @@ interface ShipmentDocument extends ShipmentTypes {
     canDelete(): boolean;
 }
 interface ShipmentModel extends Model<ShipmentDocument> {
-    doesTrackingNumberExist(trackingNumber: string): Promise<boolean>;
     findByStatus(status: ShipmentStatus): Promise<ShipmentDocument[]>;
 }
 declare const Shipment: ShipmentModel;
